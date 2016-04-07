@@ -1,10 +1,7 @@
 import pickle
 from collections import defaultdict, OrderedDict
+import pandas
 
-
-# def create_five_week_total(daily_counts):
-#     for turnstile, days in daily_counts.items():
-#         pass
 
 
 def combine_turnstiles(daily_counts):
@@ -20,8 +17,7 @@ def combine_turnstiles(daily_counts):
             existing_data = daily_station_counts.get(unique)
             for day in data:
                 # print existing_data[day[0]]
-                existing_data[day[0]] = map(lambda x, y: x + y, existing_data.get(day[0], [0, 0]),
-                                            [day[1][0], day[1][1]])
+                existing_data[day[0]] = existing_data.get(day[0], 0) + day[1][0] + day[1][1]
         else:
             temp_d = OrderedDict()
             for day in sorted(data):
@@ -42,14 +38,21 @@ def combine_stations(daily_counts):
         if unique in daily_station_counts:
             existing_data = daily_station_counts.get(unique)
             for day in data:
-                existing_data[day[0]] = map(lambda x, y: x + y, existing_data.get(day[0], [0, 0]),
-                                            [day[1][0], day[1][1]])
+                existing_data[day[0]] = existing_data.get(day[0], 0) + day[1][0] + day[1][1]
         else:
             temp_d = OrderedDict()
             for day in sorted(data):
-                temp_d[day[0]] = [day[1][0], day[1][1]]
+                temp_d[day[0]] = day[1][0] + day[1][1]
             daily_station_counts[unique] = temp_d
     return daily_station_counts
+
+
+def create_five_week_total(daily_counts):
+    five_week_counts_dict = {}
+    for station, day_dict in daily_counts.items():
+        for day, counts in day_dict.items():
+            five_week_counts_dict[station] = five_week_counts_dict.get(station, 0) + counts[0] + counts[1]
+    return five_week_counts_dict
 
 
 def check_zero_entries(d):
@@ -86,6 +89,19 @@ def print_small_dict(d, n):
     print small
 
 
+def load_into_df(d):
+    """
+    Loads dictionary into pandas dataframe.
+    :param d: dictionary
+    :return:
+    """
+    df = pandas.DataFrame(d)
+    print df.head()
+
+
+
+
+
 def main():
     # Load dictionary of daily number of entries by turnstile
     with open('daily_entry_mta_mod.pickle', 'rb') as handle:
@@ -94,14 +110,22 @@ def main():
     # Testing
     # print_small_dict(daily_counts, 2)
     # check_zero_entries(pickle_check)
+
     # daily_turnstile_counts = combine_turnstiles(daily_counts)
     # print_small_dict(daily_station_counts, 5)
+
     daily_station_counts = combine_stations(daily_counts)
-    print_small_dict(daily_station_counts, 2)
+    # print_small_dict(daily_station_counts, 2)
     # check_zero_entries(daily_station_counts)
-    with open('daily_station_counts.pickle','wb') as handle:
-        pickle.dump(daily_station_counts, handle)
-    # create_five_week_total(daily_counts)
+
+    # five_week_counts_dict = create_five_week_total(daily_station_counts)
+    # print_small_dict(five_week_counts_dict, 10)
+
+    # with open('daily_station_counts.pickle','wb') as handle:
+    #     pickle.dump(daily_station_counts, handle)
+
+    load_into_df(daily_station_counts)
+
 
 if __name__ == '__main__':
     main()
