@@ -99,12 +99,9 @@ def load_into_df(d):
     print df.head()
 
 
-
-
-
 def main():
     # Load dictionary of daily number of entries by turnstile
-    with open('daily_entry_mta_mod.pickle', 'rb') as handle:
+    with open('daily_entry_final.pickle', 'rb') as handle:
         daily_counts = pickle.load(handle)
 
     # Testing
@@ -121,8 +118,8 @@ def main():
     # five_week_counts_dict = create_five_week_total(daily_station_counts)
     # print_small_dict(five_week_counts_dict, 10)
 
-    # with open('daily_station_counts.pickle','wb') as handle:
-    #     pickle.dump(daily_station_counts, handle)
+    with open('daily_station_counts.pickle','wb') as handle:
+        pickle.dump(daily_station_counts, handle)
 
     load_into_df(daily_station_counts)
 
