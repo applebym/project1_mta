@@ -89,6 +89,18 @@ def print_small_dict(d, n):
     print small
 
 
+def top_stations_full(df):
+
+
+    tot_count = df.sum(axis=0)
+    tot_count.sort_values(inplace=True,ascending=False)
+    print tot_count
+
+
+def top_stations_weekly(df):
+    tot_count = df.sum()
+
+
 def load_into_df(d):
     """
     Loads dictionary into pandas dataframe.
@@ -96,13 +108,16 @@ def load_into_df(d):
     :return:
     """
     df = pandas.DataFrame(d)
-    print df.head()
+    df[df > 1000000] = 0
+    # print df.head()
+    # print df.describe()
+    return df
 
 
 def main():
     # Load dictionary of daily number of entries by turnstile
-    with open('daily_entry_final.pickle', 'rb') as handle:
-        daily_counts = pickle.load(handle)
+    # with open('daily_entry_final.pickle', 'rb') as handle:
+    #     daily_counts = pickle.load(handle)
 
     # Testing
     # print_small_dict(daily_counts, 2)
@@ -111,18 +126,25 @@ def main():
     # daily_turnstile_counts = combine_turnstiles(daily_counts)
     # print_small_dict(daily_station_counts, 5)
 
-    daily_station_counts = combine_stations(daily_counts)
+    # daily_station_counts = combine_stations(daily_counts)
     # print_small_dict(daily_station_counts, 2)
     # check_zero_entries(daily_station_counts)
 
     # five_week_counts_dict = create_five_week_total(daily_station_counts)
     # print_small_dict(five_week_counts_dict, 10)
 
-    with open('daily_station_counts.pickle','wb') as handle:
-        pickle.dump(daily_station_counts, handle)
+    # with open('daily_station_counts.pickle','wb') as handle:
+    #     pickle.dump(daily_station_counts, handle)
 
-    load_into_df(daily_station_counts)
+    with open('daily_station_counts.pickle','rb') as handle:
+        dsc = pickle.load(handle)
 
+    print dsc['149 ST-3 AVE 25']
+    # print daily_counts[('R310','R053','01-00-00','149 ST-3 AVE')]
+    # print daily_counts.keys()
+
+    df = load_into_df(dsc)
+    top_stations_full(df)
 
 if __name__ == '__main__':
     main()
