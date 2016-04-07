@@ -8,30 +8,82 @@ from collections import defaultdict, OrderedDict
 
 
 def combine_turnstiles(daily_counts):
+    """
+    Combines entry and exit counts across SCP key.
+    :param daily_counts: dictionary {(C/A, UNIT, SCP, STATION): [[day, entries, exits],...]}
+    :return: dictionary {(C/A, UNIT, STATION): [[day, entries, exits],...]}
+    """
     daily_station_counts = defaultdict(OrderedDict)
     for turnstile, data in daily_counts.items():
         unique = (turnstile[0],turnstile[1],turnstile[3])
         if unique in daily_station_counts:
             existing_data = daily_station_counts.get(unique)
             for day in data:
-                existing_data[day[0]] = existing_data.get(day[0], 0) + day[1]
+                # print existing_data[day[0]]
+                existing_data[day[0]] = map(lambda x, y: x + y, existing_data.get(day[0], [0, 0]),
+                                            [day[1][0], day[1][1]])
         else:
             temp_d = OrderedDict()
             for day in sorted(data):
-                temp_d[day[0]] = day[1]
+                temp_d[day[0]] = [day[1][0], day[1][1]]
             daily_station_counts[unique] = temp_d
     return daily_station_counts
 
+
+def combine_stations(daily_counts):
+    """
+    Combines entry and exit counts across STATION key.
+    :param daily_counts: dictionary {(C/A, UNIT, STATION): [[day, entries, exits],...]}
+    :return: dictionary {(STATION): [[day, entries, exits],...]}
+    """
+    daily_station_counts = defaultdict(dict)
+    for turnstile, data in daily_counts.items():
+        unique = turnstile[3]
+        if unique in daily_station_counts:
+            existing_data = daily_station_counts.get(unique)
+            for day in data:
+                existing_data[day[0]] = map(lambda x, y: x + y, existing_data.get(day[0], [0, 0]),
+                                            [day[1][0], day[1][1]])
+        else:
+            temp_d = OrderedDict()
+            for day in sorted(data):
+                temp_d[day[0]] = [day[1][0], day[1][1]]
+            daily_station_counts[unique] = temp_d
+    return daily_station_counts
+
+
 def check_zero_entries(d):
-    zero_count = 0
-    tot_count = 0
-    for key in d.keys():
-        for day in d[key]:
-            if day[1][0] == 0: zero_count += 1
-            tot_count += 1
-    print 'There are %d data points with zero entries.' % zero_count
-    print 'There are %d data points total' % tot_count
-    print 'This represents %.9f of the data' % (zero_count//tot_count)
+    """
+    Checks how many entry data points are equal to zero.
+    :param d: dictionary
+    :return: None
+    """
+    zero_entry_count = 0
+    zero_exit_count = 0
+    tot_entry_count = 0
+    tot_exit_count = 0
+    for key, value in d.items():
+        for key2, value2 in value.items():
+            if value2[0] == 0: zero_entry_count += 1
+            if value2[1] == 0: zero_exit_count += 1
+            tot_entry_count += 1
+            tot_exit_count += 1
+
+    print 'There are %d data points with zero entries.' % zero_entry_count
+    print 'There are %d entry data points total.' % tot_entry_count
+    print 'There are %d data points with zero exits.' % zero_exit_count
+    print 'There are %d exit data points total.' % tot_exit_count
+
+
+def print_small_dict(d, n):
+    """
+    Print n keys from the dictionary d.
+    :param d: dictionary
+    :param n: int
+    :return: None
+    """
+    small = {k: d[k] for k in d.keys()[:n]}
+    print small
 
 
 def main():
@@ -39,15 +91,16 @@ def main():
     with open('daily_entry_mta_mod.pickle', 'rb') as handle:
         daily_counts = pickle.load(handle)
 
-    pickle_check = {k: daily_counts[k] for k in daily_counts.keys()}
-    # print pickle_check
-    check_zero_entries(pickle_check)
-
-
-    # daily_station_counts = combine_turnstiles(daily_counts)
-    # small_print = {k: daily_station_counts[k] for k in daily_station_counts.keys()[:5]}
-    #print(small_print)
-
+    # Testing
+    # print_small_dict(daily_counts, 2)
+    # check_zero_entries(pickle_check)
+    # daily_turnstile_counts = combine_turnstiles(daily_counts)
+    # print_small_dict(daily_station_counts, 5)
+    daily_station_counts = combine_stations(daily_counts)
+    print_small_dict(daily_station_counts, 2)
+    # check_zero_entries(daily_station_counts)
+    with open('daily_station_counts.pickle','wb') as handle:
+        pickle.dump(daily_station_counts, handle)
     # create_five_week_total(daily_counts)
 
 if __name__ == '__main__':
